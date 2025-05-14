@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Histórico de Apostas | SejaSocio.bet</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; color: #333; }
+    header { background-color: #000; color: #fff; text-align: center; padding: 30px; }
+    h1 { margin: 0; font-size: 2em; }
+    .container { max-width: 800px; margin: 40px auto; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .aposta { border-bottom: 1px solid #ddd; padding: 15px 0; }
+    .aposta:last-child { border-bottom: none; }
+    .status-ganhou { color: green; }
+    .status-perdeu { color: red; }
+    a.button { display: inline-block; margin-top: 20px; background: #000; color: white; padding: 10px 16px; border-radius: 5px; text-decoration: none; font-size: 0.9em; }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  <script src="firebase-config.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Seu Histórico de Apostas</h1>
+  </header>
+
+  <div class="container" id="historico-container">
+    <p>Carregando...</p>
+  </div>
+
+  <script>
+    // Verifica login
+    const usuarioEmail = localStorage.getItem("usuario_email");
+    if (!usuarioEmail) {
+      window.location.href = "login.html";
+    }
+
+    const container = document.getElementById("historico-container");
+
+    async function carregarHistorico() {
+      try {
+        const snapshot = await db.collection("apostas")
+          .where("usuario", "==", usuarioEmail)
+          .orderBy("timestamp", "desc")
+          .get();
+
+        if (snapshot.empty) {
+          container.innerHTML = '<p>Você ainda não fez nenhuma aposta.</p>';
+          return;
+        }
+
+        container.innerHTML = '';
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const div = document.createElement("div");
+          div.classList.add("aposta");
+          div.innerHTML = `
+            <strong>Evento:</strong> ${data.evento}<br>
+            <strong>Sua Resposta:</strong> ${data.resposta}<br>
+            <strong>Status:</strong> <span class="status-${data.resultado === 'ganhou' ? 'ganhou' : 'perdeu'}">${data.resultado === 'ganhou' ? 'Ganhou' : 'Perdeu'}</span><br>
+            <strong>Startup:</strong> ${data.startup}<br>
+            <small>${new Date(data.timestamp).toLocaleString()}</small>
+          `;
+          container.appendChild(div);
+        });
+      } catch (error) {
+        console.error("Erro ao carregar histórico:", error);
+        container.innerHTML = '<p>Erro ao carregar seu histórico. Tente novamente mais tarde.</p>';
+      }
+    }
+
+    carregarHistorico();
+  </script>
+</body>
+</html>

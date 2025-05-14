@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Administrativo | SejaSocio.bet</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f9f9f9; margin: 0; color: #333; }
+    header { background-color: #000; color: white; text-align: center; padding: 30px; }
+    h1 { margin: 0; font-size: 2em; }
+    .container { max-width: 1000px; margin: 40px auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .registro { border-bottom: 1px solid #ddd; padding: 10px 0; }
+    .registro:last-child { border-bottom: none; }
+    .status-ganhou { color: green; }
+    .status-perdeu { color: red; }
+    small { color: #666; }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  <script src="firebase-config.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Painel Administrativo</h1>
+    <p>Visualize todas as apostas feitas na plataforma</p>
+  </header>
+
+  <div class="container" id="admin-container">
+    <div style="text-align: right; font-size: 0.9em; margin-bottom: 10px;">
+      Olá, <strong><span id="admin-nome"></span></strong> 👋
+    </div>
+    <p>Carregando apostas...</p>
+  </div>
+
+  <script>
+    // Verifica se o usuário logado é o admin autorizado
+    const usuarioEmail = localStorage.getItem("usuario_email");
+    const adminAutorizado = "drclaudiocutrim3@proton.me"; // ALTERE para seu e-mail admin
+
+    if (!usuarioEmail || usuarioEmail !== adminAutorizado) {
+      alert("Acesso restrito. Você será redirecionado.");
+      window.location.href = "login.html";
+    }
+
+    const nomeAdmin = localStorage.getItem("usuario_nome");
+    if (nomeAdmin) {
+      document.getElementById("admin-nome").textContent = nomeAdmin;
+    }
+
+    async function carregarApostas() {
+      const container = document.getElementById("admin-container");
+      try {
+        const snapshot = await db.collection("apostas")
+          .orderBy("timestamp", "desc")
+          .get();
+
+        if (snapshot.empty) {
+          container.innerHTML += '<p>Nenhuma aposta encontrada.</p>';
+          return;
+        }
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const div = document.createElement("div");
+          div.classList.add("registro");
+          div.innerHTML = `
+            <strong>Usuário:</strong> ${data.usuario}<br>
+            <strong>Evento:</strong> ${data.evento}<br>
+            <strong>Resposta:</strong> ${data.resposta}<br>
+            <strong>Resultado:</strong> <span class="status-${data.resultado === 'ganhou' ? 'ganhou' : 'perdeu'}">${data.resultado}</span><br>
+            <strong>Startup:</strong> ${data.startup}<br>
+            <small>${new Date(data.timestamp).toLocaleString()}</small>
+          `;
+          container.appendChild(div);
+        });
+      } catch (error) {
+        console.error("Erro ao carregar apostas:", error);
+        container.innerHTML = '<p>Erro ao carregar os dados. Verifique sua conexão.</p>';
+      }
+    }
+
+    carregarApostas();
+  </script>
+</body>
+</html>

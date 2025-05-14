@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Escolha seu Evento | SejaSocio.bet</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 0; color: #222; }
+    header { background-color: #000; color: white; text-align: center; padding: 30px; }
+    h1 { margin: 0; font-size: 2em; }
+    section { padding: 40px 20px; max-width: 800px; margin: auto; }
+    .evento { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 1px 1px 5px rgba(0,0,0,0.1); }
+    .evento h2 { margin-top: 0; }
+    .opcoes label { display: block; margin-bottom: 10px; }
+    .opcoes input[type="radio"] { margin-right: 10px; }
+    button { padding: 10px 20px; background: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+    button:hover { background: #0056b3; }
+    .logout { text-align: center; margin-top: 20px; }
+    .logout button { background: #555; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Escolha um Evento para Apostar</h1>
+  </header>
+
+  <section>
+    <div class="evento">
+      <h2>Quem vence o jogo Brasil x Argentina?</h2>
+      <div class="opcoes">
+        <label><input type="radio" name="jogo1" value="Brasil"> Brasil</label>
+        <label><input type="radio" name="jogo1" value="Argentina"> Argentina</label>
+        <label><input type="radio" name="jogo1" value="Empate"> Empate</label>
+      </div>
+      <button onclick="apostar('jogo1')">Apostar</button>
+    </div>
+
+    <div class="evento">
+      <h2>Bitcoin vai subir ou cair nesta semana?</h2>
+      <div class="opcoes">
+        <label><input type="radio" name="btc" value="Subir"> Subir</label>
+        <label><input type="radio" name="btc" value="Cair"> Cair</label>
+      </div>
+      <button onclick="apostar('btc')">Apostar</button>
+    </div>
+  </section>
+
+  <div class="logout">
+    <button onclick="logout()">Sair</button>
+  </div>
+
+  <script>
+    // Verifica login
+    if (!localStorage.getItem('usuario_email')) {
+      window.location.href = 'login.html';
+    }
+
+    function apostar(nomeEvento) {
+      const opcoes = document.getElementsByName(nomeEvento);
+      let escolha = null;
+      for (const opcao of opcoes) {
+        if (opcao.checked) {
+          escolha = opcao.value;
+          break;
+        }
+      }
+      if (!escolha) {
+        alert("Escolha uma opção antes de apostar.");
+        return;
+      }
+
+      localStorage.setItem("evento", nomeEvento);
+      localStorage.setItem("resposta", escolha);
+
+      window.location.href = "resultado_aposta.html";
+    }
+
+    function logout() {
+      localStorage.removeItem("usuario_nome");
+      localStorage.removeItem("usuario_email");
+      window.location.href = "login.html";
+    }
+  </script>
+<!-- No final do arquivo, antes do </body> -->
+
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+<script src="firebase-config.js"></script>
+
+</body>
+</html>

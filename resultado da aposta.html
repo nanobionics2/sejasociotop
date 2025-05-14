@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resultado da Aposta | SejaSocio.bet</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; margin: 0; padding: 0; }
+    header { background-color: #000; color: #fff; padding: 40px 20px; text-align: center; }
+    h1 { margin: 0; font-size: 2.4em; }
+    .container { max-width: 600px; margin: 40px auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; }
+    .resultado { font-size: 1.4em; margin-bottom: 20px; }
+    .ganhou { color: green; }
+    .perdeu { color: red; }
+    .info { font-size: 1em; color: #555; }
+    a.button { display: inline-block; margin-top: 30px; background: #000; color: white; padding: 12px 20px; border-radius: 5px; text-decoration: none; font-size: 1em; }
+  </style>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  <script src="firebase-config.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Resultado da Sua Aposta</h1>
+  </header>
+
+  <div class="container" id="resultado-container">
+    <!-- Resultado será inserido via JS -->
+  </div>
+
+  <script>
+    const eventos = {
+      jogo1: {
+        pergunta: "Quem vence o jogo Brasil x Argentina?",
+        respostaCorreta: "Brasil",
+        startup: "Clínica Robótica"
+      },
+      btc: {
+        pergunta: "Bitcoin vai subir ou cair nesta semana?",
+        respostaCorreta: "Subir",
+        startup: "NexialWear"
+      }
+    };
+
+    const container = document.getElementById("resultado-container");
+
+    const eventoKey = localStorage.getItem("evento");
+    const respostaUsuario = localStorage.getItem("resposta");
+    const usuarioEmail = localStorage.getItem("usuario_email");
+    const evento = eventos[eventoKey];
+
+    if (!evento || !respostaUsuario || !usuarioEmail) {
+      container.innerHTML = `
+        <div class="resultado perdeu">Erro: Dados da aposta não encontrados.</div>
+        <div class="info">Tente novamente e verifique se você fez uma escolha.</div>
+        <a class="button" href="eventos.html">Voltar</a>
+      `;
+    } else {
+      const ganhou = respostaUsuario === evento.respostaCorreta;
+
+      container.innerHTML = `
+        <div class="resultado ${ganhou ? 'ganhou' : 'perdeu'}">
+          ${ganhou ? 'Parabéns! Você acertou a aposta!' : 'Você errou, mas sua aposta virou investimento de impacto!'}
+        </div>
+        <div class="info">
+          ${ganhou
+            ? `Você receberá ações simbólicas da startup <strong>${evento.startup}</strong>.`
+            : `A startup <strong>${evento.startup}</strong> recebeu um aporte graças à sua aposta.`}
+        </div>
+        <a class="button" href="eventos.html">Apostar Novamente</a>
+      `;
+
+      // Salva no histórico local
+      const historico = JSON.parse(localStorage.getItem("historico_apostas") || "[]");
+      historico.push({
+        evento: evento.pergunta,
+        resposta: respostaUsuario,
+        resultado: ganhou ? "ganhou" : "perdeu",
+        startup: evento.startup,
+        timestamp: new Date().toISOString()
+      });
+      localStorage.setItem("historico_apostas", JSON.stringify(historico));
+
+      // Salva no Firestore (Firebase)
+      if (window.db) {
+        db.collection("apostas").add({
+          usuario: usuarioEmail,
+          evento: evento.pergunta,
+          resposta: respostaUsuario,
+          resultado: ganhou ? "ganhou" : "perdeu",
+          startup: evento.startup,
+          timestamp: new Date().toISOString()
+        }).then(() => {
+          console.log("Aposta salva no Firebase");
+        }).catch(error => {
+          console.error("Erro ao salvar no Firebase:", error);
+        });
+      }
+    }
+  </script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+<script src="firebase-config.js"></script>
+
+</body>
+</html>
